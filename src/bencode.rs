@@ -44,10 +44,6 @@ impl fmt::Debug for BencodeError {
     }
 }
 
-pub struct Stack<T> {
-    stack: Vec<T>,
-}
-
 pub trait Bencode {
     fn bencode(&self) -> String;
 }
@@ -304,7 +300,7 @@ fn decode_string(
         }
     }
 }*/
-
+/*
 impl<T> Stack<T> {
     pub fn new() -> Self {
         Stack { stack: Vec::new() }
@@ -324,7 +320,7 @@ impl<T> Stack<T> {
     pub fn peek(&self) -> Option<&T> {
         self.stack.last()
     }
-}
+}*/
 
 pub fn bdecode(data: &String) -> BDecodedChunk {
     if data.is_empty() {

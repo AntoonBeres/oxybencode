@@ -13,9 +13,9 @@ fn main() {
     let test_string: String = "d4:spami3ee".to_string();
     let test_result: HashMap<String, Box<BDecodedChunk>> = test_string.decode_bencode().unwrap();
 
-    for i in test_result {
+    /*for i in test_result {
         println!("{}", i);
-    }
+    }*/
 
     //println!("Hello, world! --{}--", test_result);
 }
