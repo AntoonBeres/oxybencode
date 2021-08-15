@@ -3,7 +3,7 @@ use itertools::Itertools;
 use std::collections::HashMap;
 
 pub enum BDecodedChunk {
-    Dictionary(HashMap<Box<String>, Box<BDecodedChunk>>),
+    Dictionary(HashMap<String, Box<BDecodedChunk>>),
     Int(i64),
     List(Vec<Box<BDecodedChunk>>),
     Str(String),
@@ -195,7 +195,7 @@ fn decode_dictionary(
             .peek()
             .expect("error reading next key-value pair in dict");
     }
-
+    source.next();
     Ok(result_dict)
 }
 
@@ -223,6 +223,12 @@ fn decode_list(
             'l' => {
                 let vec_read: Vec<Box<BDecodedChunk>> = decode_list(source).unwrap();
                 let chunk_item = BDecodedChunk::List(vec_read);
+                result_vec.push(Box::new(chunk_item));
+            }
+            'd' => {
+                let dict_read: HashMap<String, Box<BDecodedChunk>> =
+                    decode_dictionary(source).unwrap();
+                let chunk_item = BDecodedChunk::Dictionary(dict_read);
                 result_vec.push(Box::new(chunk_item));
             }
             'e' => {}
