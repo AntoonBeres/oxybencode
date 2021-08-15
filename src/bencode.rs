@@ -132,18 +132,12 @@ impl BencodeDecodable<Vec<Box<BDecodedChunk>>> for String {
             return Err(BencodeError::UnmatchedType);
         }
         decode_list(&mut char_iter)
-        /*
-        let j: i64 = 64;
-        i.push(Box::new(j));
-        Ok(i)*/
     }
 }
 
 impl BencodeDecodable<HashMap<String, Box<BDecodedChunk>>> for String {
     fn decode_bencode(&self) -> Result<HashMap<String, Box<BDecodedChunk>>, BencodeError> {
         let _first_char = self.chars().next().unwrap();
-        /*if first_char == 'f' {
-        }*/
 
         let mut i: HashMap<String, Box<BDecodedChunk>> = HashMap::new();
         let test_string = "yeet".to_string();
@@ -256,7 +250,6 @@ fn decode_int(source: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<i
         result_string.push(current_char);
         current_char = source.next().expect("failed to read next character");
     }
-    //source.next(); // Drop the trailing 'e'
 
     let result: i64 = result_string.parse().expect("error parsing");
     Ok(result)
