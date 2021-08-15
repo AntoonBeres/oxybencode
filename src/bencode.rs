@@ -6,7 +6,7 @@ pub enum BDecodedChunk {
     Dictionary(HashMap<Box<String>, Box<BDecodedChunk>>),
     Int(i64),
     List(Vec<Box<BDecodedChunk>>),
-    Str(Box<String>),
+    Str(String),
     Null,
 }
 
@@ -151,13 +151,62 @@ impl BencodeDecodable<HashMap<String, Box<BDecodedChunk>>> for String {
         let k: String = "yeeqwatqawtr".to_string();
 
         i.insert(test_string, Box::new(BDecodedChunk::Int(j)));
-        i.insert(
-            "aqwfra".to_string(),
-            Box::new(BDecodedChunk::Str(Box::new(k))),
-        );
+        i.insert("aqwfra".to_string(), Box::new(BDecodedChunk::Str(k)));
 
         Ok(i)
     }
+}
+
+fn decode_dictionary(
+    source: &mut std::iter::Peekable<std::str::Chars<'_>>,
+) -> Result<HashMap<String, Box<BDecodedChunk>>, BencodeError> {
+    let mut result_dict: HashMap<String, Box<BDecodedChunk>> = HashMap::new();
+
+    assert!(
+        source.next().unwrap() == 'd',
+        "attempt to decode dictionary, that doesn't start with \"d\""
+    );
+
+    let mut current_char = *source
+        .peek()
+        .expect("error reading next char, while parsing dictionary");
+
+    while current_char != 'e' {
+        assert!(
+            current_char.is_digit(10),
+            "found key in dictionary that isn't a string"
+        );
+        let key_read: String = decode_string(source).unwrap();
+        current_char = *source.peek().expect("error reading dictionary value");
+
+        let chunk_item = match current_char {
+            'i' => {
+                let int_read: i64 = decode_int(source).unwrap();
+                BDecodedChunk::Int(int_read)
+            }
+            token if token.is_digit(10) => {
+                let string_read: String = decode_string(source).unwrap();
+                BDecodedChunk::Str(string_read)
+            }
+            'l' => {
+                let vec_read: Vec<Box<BDecodedChunk>> = decode_list(source).unwrap();
+                BDecodedChunk::List(vec_read)
+            }
+            'e' => BDecodedChunk::Null,
+            _ => BDecodedChunk::Null,
+        };
+        match chunk_item {
+            BDecodedChunk::Null => return Err(BencodeError::UnexpectedError),
+            _ => {
+                result_dict.insert(key_read, Box::new(chunk_item));
+            }
+        }
+        current_char = *source
+            .peek()
+            .expect("error reading next key-value pair in dict");
+    }
+
+    Ok(result_dict)
 }
 
 fn decode_list(
@@ -178,7 +227,7 @@ fn decode_list(
             }
             token if token.is_digit(10) => {
                 let string_read: String = decode_string(source).unwrap();
-                let chunk_item = BDecodedChunk::Str(Box::new(string_read));
+                let chunk_item = BDecodedChunk::Str(string_read);
                 result_vec.push(Box::new(chunk_item));
             }
             'l' => {
