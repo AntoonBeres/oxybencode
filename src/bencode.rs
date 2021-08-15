@@ -16,6 +16,26 @@ pub enum BencodeError {
     UnexpectedError,
 }
 
+fn string_from_hashmap<T>(inp: &HashMap<String, T>) -> String
+where
+    T: fmt::Display,
+{
+    let mut result = "".to_string();
+    for (key, val) in inp {
+        result.push_str(key);
+        result.push_str(" : ");
+        let val_str = &format!("{}", val)[..];
+        result.push_str(val_str);
+        result.push_str("\n    ");
+    }
+
+    //Hacky solution to remove last unnecessary newline at the end TODO: cleaner solution
+    for _i in 0..5 {
+        result.pop();
+    }
+    result
+}
+
 impl fmt::Display for BDecodedChunk {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -24,7 +44,10 @@ impl fmt::Display for BDecodedChunk {
             BDecodedChunk::List(foo) => {
                 write!(f, "<LIST>:\n    {}", foo.iter().format("\n    "))
             }
-            BDecodedChunk::Dictionary(_foo) => write!(f, "<DICT>"),
+
+            BDecodedChunk::Dictionary(foo) => {
+                write!(f, "<DICT>:\n    {}", string_from_hashmap(foo))
+            }
             BDecodedChunk::Null => write!(f, "#!NULL!#"),
         }
     }
