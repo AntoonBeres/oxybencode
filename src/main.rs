@@ -16,6 +16,5 @@ fn main() {
     for i in test_result {
         println!("{}", i);
     }
-
     //println!("Hello, world! --{}--", test_result);
 }

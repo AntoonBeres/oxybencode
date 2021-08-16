@@ -205,6 +205,11 @@ fn decode_dictionary(
                 let vec_read: Vec<Box<BDecodedChunk>> = decode_list(source).unwrap();
                 BDecodedChunk::List(vec_read)
             }
+            'd' => {
+                let dict_read: HashMap<String, Box<BDecodedChunk>> =
+                    decode_dictionary(source).unwrap();
+                BDecodedChunk::Dictionary(dict_read)
+            }
             'e' => BDecodedChunk::Null,
             _ => BDecodedChunk::Null,
         };
@@ -310,40 +315,38 @@ fn decode_string(
     Ok(result)
 }
 
-/*impl BencodeDecodable<BDecodedChunk> for String {
+impl BencodeDecodable<BDecodedChunk> for String {
     fn decode_bencode(&self) -> Result<BDecodedChunk, BencodeError> {
-        let result: BDecodedChunk;
-        let first_char = self.chars().next().unwrap();
+        let mut char_iter = self.chars().peekable();
+        let first_char = *char_iter
+            .peek()
+            .expect("Couldn't read first character of bencoded int");
+
         match first_char {
             'i' => {
-                let int_result: i64 = self.decode_bencode().unwrap();
+                let int_result: i64 = decode_int(&mut char_iter).unwrap();
                 return Ok(BDecodedChunk::Int(int_result));
             }
             'l' => {
-                let list_result: Vec<Box<dyn Bencode>> = self.decode_bencode().unwrap();
+                let list_result: Vec<Box<BDecodedChunk>> = decode_list(&mut char_iter).unwrap();
                 return Ok(BDecodedChunk::List(list_result));
+            }
+            'd' => {
+                let dict_result: HashMap<String, Box<BDecodedChunk>> =
+                    decode_dictionary(&mut &mut char_iter).unwrap();
+                return Ok(BDecodedChunk::Dictionary(dict_result));
+            }
+            token if token.is_digit(10) => {
+                let string_read: String = decode_string(&mut char_iter).unwrap();
+                return Ok(BDecodedChunk::Str(string_read));
             }
             _ => {
                 return Ok(BDecodedChunk::Null);
             }
         }
     }
-}*/
-pub fn bdecode(data: &String) -> BDecodedChunk {
-    if data.is_empty() {
-        return BDecodedChunk::Null;
-    }
-    let char_vec: Vec<char> = data.chars().collect();
-    let mut char_iter = data.chars();
+}
 
-    match char_iter.next().unwrap() {
-        'y' => println!("it is y"),
-        _ => println!("yfagft"),
-    }
-
-    match char_vec[0] {
-        _ => println!("yeet"),
-    }
-
-    BDecodedChunk::Null
+pub fn bdecode(data: &String) -> Result<BDecodedChunk, BencodeError> {
+    data.decode_bencode()
 }
