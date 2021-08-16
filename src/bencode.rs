@@ -75,6 +75,28 @@ pub trait BencodeDecodable<T>
 where
     T: Bencode,
 {
+    /// Decodes a bencoded string into one of the supported types
+    ///
+    /// The type is inferred from the variable type. If the the element-type is unknown,
+    /// use: BDecodedChunk. The actual type can later be determined via the match control flow
+    /// operator.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bencode::{BDecodedChunk, BencodeDecodable}
+    ///
+    /// // Decodes a list containing:
+    /// //      - 3
+    /// //      - "spam"
+    /// //      - "5"
+    /// //      - another list containg:
+    /// //          - 66
+    /// //      - 8
+    /// let foo: String = "li3e4:spami5eli66eee"
+    /// let bar: Vec<Box<BDecodedChunk>> = foo.decode_bencode().unwrap();
+    /// ```
+    ///
     fn decode_bencode(&self) -> Result<T, BencodeError>;
 }
 
@@ -266,6 +288,7 @@ fn decode_list(
         }
         current_char = *source.peek().expect("error reading next item in list");
     }
+    source.next();
     Ok(result_vec)
 }
 
